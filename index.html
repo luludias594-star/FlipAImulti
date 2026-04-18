@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlipAI — Multi Pagamentos</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;700;900&display=swap"
+    rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #dde8ff;
+      font-family: 'Inter', sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    #wrap {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 480px;
+      height: 96vh;
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+      position: relative;
+      border: 1px solid #c7d2fe;
+    }
+
+    /* HEADER */
+    #hdr {
+      background: #1a3bcc;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .logo-top {
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+
+    .logo-top span {
+      color: #a78bfa;
+    }
+
+    #status {
+      font-size: 11px;
+      color: #c7d2fe;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4ade80;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.4
+      }
+    }
+
+    /* STAGE */
+    #stage {
+      flex: 1;
+      position: relative;
+      background: radial-gradient(circle at 50% 50%, #ffffff 0%, #dde8ff 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #floor {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 60px;
+      background: linear-gradient(to bottom, #c7d2fe, #b8c5f5);
+      border-top: 1px solid #a5b4fc;
+    }
+
+    #shadow {
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 12px;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      filter: blur(4px);
+      animation: shadow-anim 2.4s infinite ease-in-out;
+    }
+
+    @keyframes shadow-anim {
+
+      0%,
+      100% {
+        transform: translateX(-50%) scale(1);
+        opacity: 0.1
+      }
+
+      50% {
+        transform: translateX(-50%) scale(0.6);
+        opacity: 0.05
+      }
+    }
+
+    /* BALÃO DE FALA */
+    #balloon {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-20%) scale(0.8);
+      background: #fff;
+      border: 2.5px solid #1a3bcc;
+      border-radius: 18px;
+      padding: 10px 16px;
+      max-width: 210px;
+      min-width: 120px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a3bcc;
+      line-height: 1.4;
+      text-align: center;
+      box-shadow: 0 4px 18px rgba(26, 59, 204, 0.13);
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    #balloon.show {
+      opacity: 1;
+      transform: translateX(-20%) scale(1);
+      animation: pop 0.3s ease-out forwards;
+    }
+
+    #balloon::after {
+      content: '';
+      position: absolute;
+      bottom: -13px;
+      left: 38px;
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 13px solid #1a3bcc;
+    }
+
+    #balloon::before {
+      content: '';
+      position: absolute;
+      bottom: -9px;
+      left: 40px;
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 10px solid #fff;
+      z-index: 1;
+    }
+
+    @keyframes pop {
+      0% {
+        transform: translateX(-20%) scale(0.7);
+        opacity: 0
+      }
+
+      60% {
+        transform: translateX(-20%) scale(1.06)
+      }
+
+      100% {
+        transform: translateX(-20%) scale(1);
+        opacity: 1
+      }
+    }
+
+    /* PERSONAGEM */
+    #char {
+      position: absolute;
+      bottom: 65px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      z-index: 5;
+      transform-origin: bottom center;
+    }
+
+    #body-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.1));
+    }
+
+    /* TOPO */
+    #top {
+      width: 90px;
+      height: 60px;
+      background: linear-gradient(145deg, #2a4bc7, #1a3bcc);
+      border-radius: 14px 14px 4px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    #printer {
+      width: 55px;
+      height: 5px;
+      background: #111e66;
+      border-radius: 4px;
+      margin-bottom: 6px;
+      box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    /* OLHOS */
+    #eyes {
+      display: flex;
+      gap: 12px;
+    }
+
+    .eye {
+      width: 22px;
+      height: 22px;
+      background: #fff;
+      border-radius: 50%;
+      position: relative;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      transition: background 0.3s, border-radius 0.3s;
+    }
+
+    .pupil {
+      width: 10px;
+      height: 10px;
+      background: #111;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: blink 4s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      90%,
+      100% {
+        transform: translate(-50%, -50%) scaleY(1)
+      }
+
+      95% {
+        transform: translate(-50%, -50%) scaleY(0.05)
+      }
+    }
+
+    /* SORRISO */
+    #smile {
+      width: 28px;
+      height: 10px;
+      border: 2.5px solid #111;
+      border-top: none;
+      border-radius: 0 0 14px 14px;
+      margin-top: 4px;
+      background: rgba(255, 255, 255, 0.15);
+      transition: all 0.3s;
+    }
+
+    /* CORPO */
+    #mid {
+      width: 90px;
+      height: 95px;
+      background: #2342c2;
+      margin-top: 2px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset -5px 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    #screen {
+      width: 78px;
+      height: 80px;
+      background: #fff;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #111;
+    }
+
+    #logo-text {
+      font-size: 7px;
+      font-weight: 800;
+      color: #111;
+      text-align: center;
+      margin-top: 4px;
+      line-height: 1;
+    }
+
+    /* BRAÇOS */
+    #arm-l,
+    #arm-r {
+      position: absolute;
+      top: 62px;
+      width: 12px;
+      height: 52px;
+      background: #111;
+      border-radius: 10px;
+    }
+
+    #arm-l {
+      left: -6px;
+      transform-origin: top center;
+    }
+
+    #arm-r {
+      right: -6px;
+      transform-origin: top center;
+    }
+
+    .hand {
+      position: absolute;
+      bottom: -10px;
+      width: 18px;
+      height: 18px;
+      background: #eef;
+      border-radius: 50%;
+      border: 2px solid #dde;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* PERNAS */
+    #legs {
+      display: flex;
+      gap: 20px;
+      margin-top: -2px;
+    }
+
+    .leg {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .leg-seg {
+      width: 13px;
+      height: 32px;
+      background: #111;
+      border-radius: 0 0 3px 3px;
+    }
+
+    .shoe {
+      width: 28px;
+      height: 13px;
+      background: #f0f0f0;
+      border-radius: 4px 6px 4px 4px;
+      border: 1.5px solid #bbb;
+      margin-top: -1px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .shoe::before {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 4px;
+      right: 4px;
+      height: 1.5px;
+      background: #bbb;
+      border-radius: 1px;
+    }
+
+    .shoe::after {
+      content: '';
+      position: absolute;
+      top: 7px;
+      left: 4px;
+      right: 4px;
+      height: 1.5px;
+      background: #bbb;
+      border-radius: 1px;
+    }
+
+    /* SCORE */
+    #score-wrap {
+      position: absolute;
+      top: 12px;
+      left: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .pill {
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(26, 59, 204, 0.2);
+      padding: 3px 10px;
+      border-radius: 99px;
+      color: #1a3bcc;
+      font-weight: 600;
+    }
+
+    /* COMBO POPUP */
+    #combo-msg {
+      position: absolute;
+      top: 38%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-size: 22px;
+      font-weight: 900;
+      color: #fbbf24;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      pointer-events: none;
+      transition: transform 0.2s cubic-bezier(.34, 1.56, .64, 1), opacity 0.4s;
+      opacity: 0;
+      white-space: nowrap;
+      font-family: 'Inter', sans-serif;
+    }
+
+    #combo-msg.show {
+      transform: translate(-50%, -80%) scale(1);
+      opacity: 1;
+    }
+
+    /* ANIMAÇÕES DO PERSONAGEM */
+    @keyframes idle {
+
+      0%,
+      100% {
+        transform: translateX(-50%) translateY(0)
+      }
+
+      50% {
+        transform: translateX(-50%) translateY(-4px)
+      }
+    }
+
+    @keyframes flip {
+      0% {
+        transform: translateX(-50%) translateY(0) rotate(0)
+      }
+
+      30% {
+        transform: translateX(-50%) translateY(-140px) rotate(-120deg)
+      }
+
+      60% {
+        transform: translateX(-50%) translateY(-160px) rotate(-240deg)
+      }
+
+      100% {
+        transform: translateX(-50%) translateY(0) rotate(-360deg)
+      }
+    }
+
+    @keyframes jump {
+
+      0%,
+      100% {
+        transform: translateX(-50%) translateY(0)
+      }
+
+      50% {
+        transform: translateX(-50%) translateY(-120px)
+      }
+    }
+
+    @keyframes wave-arm {
+
+      0%,
+      100% {
+        transform: rotate(-230deg)
+      }
+
+      50% {
+        transform: rotate(-160deg)
+      }
+    }
+
+    @keyframes dance {
+
+      0%,
+      100% {
+        transform: translateX(-50%) rotate(0)
+      }
+
+      25% {
+        transform: translateX(-50%) rotate(-8deg) translateY(-6px)
+      }
+
+      75% {
+        transform: translateX(-50%) rotate(8deg) translateY(-6px)
+      }
+    }
+
+    .anim-idle {
+      animation: idle 2.4s infinite ease-in-out;
+    }
+
+    .anim-flip {
+      animation: flip 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    .anim-jump {
+      animation: jump 0.7s ease-out forwards;
+    }
+
+    .anim-dance {
+      animation: dance 0.4s infinite ease-in-out;
+    }
+
+    /* PAINEL */
+    #panel {
+      background: #f8faff;
+      padding: 14px 16px;
+      border-top: 2px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+    }
+
+    #inp {
+      flex: 1;
+      padding: 10px 14px;
+      border: 2px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 13px;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s;
+    }
+
+    #inp:focus {
+      border-color: #7c3aed;
+    }
+
+    #inp::placeholder {
+      color: #9ca3af;
+    }
+
+    #btn {
+      padding: 0 16px;
+      background: #7c3aed;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    #btn:hover {
+      background: #6d28d9;
+    }
+
+    #btn:active {
+      transform: scale(0.97);
+    }
+
+    #btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .q-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .q {
+      padding: 6px 10px;
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      color: #475569;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .q:hover {
+      border-color: #7c3aed;
+      color: #7c3aed;
+      background: #f5f3ff;
+    }
+
+    #hint {
+      font-size: 10px;
+      color: #94a3b8;
+      font-family: 'DM Mono', monospace;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="wrap">
+
+    <!-- HEADER -->
+    <div id="hdr">
+      <div class="logo-top">Flip<span>AI</span> — Multi Pagamentos</div>
+      <div id="status"><span class="dot"></span><span id="stxt">PRONTO</span></div>
+    </div>
+
+    <!-- STAGE -->
+    <div id="stage">
+
+      <!-- BALÃO DE FALA -->
+      <div id="balloon">Oi! Sou a maquininha do Multi! 👋</div>
+
+      <div id="shadow"></div>
+
+      <!-- PERSONAGEM -->
+      <div id="char" class="anim-idle">
+        <div id="arm-l">
+          <div class="hand"></div>
+        </div>
+        <div id="arm-r">
+          <div class="hand"></div>
+        </div>
+        <div id="body-wrap">
+          <!-- Topo: impressora + olhos + sorriso -->
+          <div id="top">
+            <div id="printer"></div>
+            <div id="eyes">
+              <div class="eye">
+                <div class="pupil"></div>
+              </div>
+              <div class="eye">
+                <div class="pupil"></div>
+              </div>
+            </div>
+            <div id="smile"></div>
+          </div>
+          <!-- Corpo: tela com logo -->
+          <div id="mid">
+            <div id="screen">
+              <svg width="45" height="25" viewBox="0 0 52 28">
+                <polygon points="4,24 13,4 20,16 26,4 33,16 39,4 48,24" fill="none" stroke="#7c3aed" stroke-width="5"
+                  stroke-linejoin="round" />
+              </svg>
+              <div id="logo-text">MULTI<br>PAGAMENTOS</div>
+            </div>
+          </div>
+          <!-- Pernas + sapatos -->
+          <div id="legs">
+            <div class="leg">
+              <div class="leg-seg"></div>
+              <div class="shoe"></div>
+            </div>
+            <div class="leg">
+              <div class="leg-seg"></div>
+              <div class="shoe"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="floor"></div>
+
+      <!-- PONTUAÇÃO -->
+      <div id="score-wrap">
+        <div class="pill" id="score-pill">🏆 0 pts</div>
+        <div class="pill" id="combo-pill">🔥 x1</div>
+      </div>
+
+      <!-- COMBO POPUP -->
+      <div id="combo-msg"></div>
+
+    </div>
+
+    <!-- PAINEL DE CONTROLE -->
+    <div id="panel">
+      <div class="row">
+        <input id="inp" type="text" placeholder='ex: "dá uma cambalhota rápida"' autocomplete="off" />
+        <button id="btn">EXECUTAR</button>
+      </div>
+      <div class="q-row">
+        <button class="q" data-a="flip">Cambalhota</button>
+        <button class="q" data-a="flip_fast">⚡ Rápida</button>
+        <button class="q" data-a="flip_slow">Lenta</button>
+        <button class="q" data-a="jump">⬆️ Pular</button>
+        <button class="q" data-a="wave">👋 Oii</button>
+        <button class="q" data-a="dance">Dança</button>
+      </div>
+      <div id="hint">tente: "cambalhota rápida" • "pula" • "dança" • "acena" • "oi"</div>
+    </div>
+
+  </div>
+
+  <script>
+    // ── ELEMENTOS ────────────────────────────────────────────────
+    const char = document.getElementById('char');
+    const armL = document.getElementById('arm-l');
+    const armR = document.getElementById('arm-r');
+    const balloon = document.getElementById('balloon');
+    const stxt = document.getElementById('stxt');
+    const inp = document.getElementById('inp');
+    const btn = document.getElementById('btn');
+    const scorePill = document.getElementById('score-pill');
+    const comboPill = document.getElementById('combo-pill');
+    const comboMsg = document.getElementById('combo-msg');
+    const eyes = document.querySelectorAll('.eye');
+    const smile = document.getElementById('smile');
+
+    let busy = false, score = 0, combo = 1;
+    let lastAction = null, lastTime = 0;
+    let balloonTimer = null;
+
+    // ── FALAS ALEATÓRIAS ─────────────────────────────────────────
+    const FALAS = {
+      flip: ["🤸 Olha eu aí!", "Wheee! aceito pix", "Vai que é fácil! 🔄", "Saldo positivo, é pirueta! 🏦"],
+      flip_fast: ["⚡ TURBO MODE!", "Vooou rápido!", "Cambalhota na velocidade do Pix! 🚀"],
+      flip_slow: ["🐢 Com estilo...", "Devaaagar... vai passar!", "Parcelo essa cambalhota em 12x! 😂"],
+      jump: ["⬆️ Pra cima!", "Para o alto e avante!", "Saltei como um Pix instantâneo! 🚀"],
+      wave: ["👋 Oi! Tudo bem?", "Olá, cliente! Posso ajudar?", "Aceita um oi da maquininha? 😄"],
+      dance: ["💃 DJ, bota o som!", "Tô dançando e processando pagamentos!", "Débito ou crédito? Dança que sim! 🎶"],
+      unknown: ["Hmm... não entendi 🤔", "Tenta: cambalhota, pular ou dançar!", "Comando não reconhecido! 😅"],
+    };
+
+    function getFala(action) {
+      const lista = FALAS[action] || FALAS.unknown;
+      return lista[Math.floor(Math.random() * lista.length)];
+    }
+
+    // ── BALÃO DE FALA ────────────────────────────────────────────
+    function showBalloon(txt) {
+      balloon.textContent = txt;
+      balloon.classList.remove('show');
+      void balloon.offsetWidth; // force reflow para reiniciar animação
+      balloon.classList.add('show');
+      if (balloonTimer) clearTimeout(balloonTimer);
+      balloonTimer = setTimeout(() => balloon.classList.remove('show'), 3400);
+    }
+
+    // ── EXPRESSÕES FACIAIS ────────────────────────────────────────
+    function setExpression(type) {
+      if (type === 'happy') {
+        smile.style.width = '34px';
+        smile.style.height = '13px';
+        smile.style.borderRadius = '0 0 17px 17px';
+        eyes.forEach(e => e.style.background = '#fffbe8');
+      } else if (type === 'wow') {
+        smile.style.width = '18px';
+        smile.style.height = '18px';
+        smile.style.borderRadius = '50%';
+        eyes.forEach(e => { e.style.background = '#fff'; e.style.boxShadow = '0 0 0 2px #1a3bcc, inset 0 2px 4px rgba(0,0,0,0.2)'; });
+      } else {
+        // normal
+        smile.style.width = '28px';
+        smile.style.height = '10px';
+        smile.style.borderRadius = '0 0 14px 14px';
+        eyes.forEach(e => { e.style.background = '#fff'; e.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)'; });
+      }
+    }
+
+    // ── PONTUAÇÃO ─────────────────────────────────────────────────
+    const PTS = { flip: 100, flip_fast: 150, flip_slow: 80, jump: 60, wave: 40, dance: 120 };
+
+    function addScore(action) {
+      const base = action.split('_')[0];
+      const now = Date.now();
+      if (base === lastAction && now - lastTime < 5000) combo = Math.min(combo + 1, 8);
+      else combo = 1;
+      lastAction = base;
+      lastTime = now;
+
+      const gained = Math.round((PTS[action] || 60) * combo);
+      score += gained;
+      scorePill.textContent = '🏆 ' + score.toLocaleString('pt-BR') + ' pts';
+      comboPill.textContent = '🔥 x' + combo;
+
+      if (combo >= 2) {
+        comboMsg.textContent = combo >= 5
+          ? '🔥 ULTRA x' + combo + ' +' + gained
+          : combo >= 3
+            ? '⭐ COMBO x' + combo + ' +' + gained
+            : '✨ x' + combo + ' +' + gained;
+        comboMsg.classList.add('show');
+        setTimeout(() => comboMsg.classList.remove('show'), 1300);
+      }
+    }
+
+    // ── EXECUTAR ANIMAÇÃO ─────────────────────────────────────────
+    function run(action) {
+      if (busy) return;
+      busy = true;
+      btn.disabled = true;
+
+      stxt.textContent = 'EXECUTANDO...';
+      showBalloon(getFala(action));
+      addScore(action);
+
+      // Reset
+      char.className = '';
+      char.style.animation = '';
+      armL.style.animation = '';
+      armR.style.animation = '';
+      void char.offsetWidth;
+
+      let dur = 900;
+
+      if (action === 'flip') {
+        char.classList.add('anim-flip');
+        setExpression('wow');
+        dur = 900;
+      } else if (action === 'flip_fast') {
+        char.style.animation = 'flip 0.45s cubic-bezier(0.4,0,0.2,1) forwards';
+        setExpression('wow');
+        dur = 450;
+      } else if (action === 'flip_slow') {
+        char.style.animation = 'flip 1.9s cubic-bezier(0.4,0,0.2,1) forwards';
+        setExpression('wow');
+        dur = 1900;
+      } else if (action === 'jump') {
+        char.classList.add('anim-jump');
+        setExpression('happy');
+        dur = 700;
+      } else if (action === 'wave') {
+        char.classList.add('anim-idle');
+        armL.style.animation = 'wave-arm 0.4s 3 ease-in-out';
+        setExpression('happy');
+        dur = 1200;
+      } else if (action === 'dance') {
+        char.classList.add('anim-dance');
+        armL.style.animation = 'wave-arm 0.4s infinite ease-in-out';
+        armR.style.animation = 'wave-arm 0.4s infinite ease-in-out reverse';
+        setExpression('happy');
+        dur = 2500;
+      }
+
+      setTimeout(() => {
+        char.className = 'anim-idle';
+        char.style.animation = '';
+        armL.style.animation = '';
+        armR.style.animation = '';
+        setExpression('normal');
+        stxt.textContent = 'PRONTO';
+        busy = false;
+        btn.disabled = false;
+      }, dur + 80);
+    }
+
+    // ── INTERPRETADOR DE COMANDOS ─────────────────────────────────
+    function parse(txt) {
+      const t = txt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (/cambalh|flip|mortal/.test(t)) {
+        if (/rapido|rapida|veloz|ligeiro/.test(t)) return 'flip_fast';
+        if (/lento|lenta|devagar|suave/.test(t)) return 'flip_slow';
+        return 'flip';
+      }
+      if (/pul|salto|jump/.test(t)) return 'jump';
+      if (/dan[cç]|groove|mexe/.test(t)) return 'dance';
+      if (/acen|oi|ola|salud|wave|tchau/.test(t)) return 'wave';
+      return null;
+    }
+
+    // ── EVENTOS DE UI ─────────────────────────────────────────────
+    btn.addEventListener('click', () => {
+      const v = inp.value.trim();
+      if (!v) return;
+      const action = parse(v);
+      if (!action) {
+        showBalloon(getFala('unknown'));
+        inp.value = '';
+        return;
+      }
+      run(action);
+      inp.value = '';
+      inp.focus();
+    });
+
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') btn.click(); });
+
+    document.querySelectorAll('.q').forEach(b => {
+      b.addEventListener('click', () => run(b.dataset.a));
+    });
+
+    // Balão de boas-vindas
+    setTimeout(() => showBalloon("Oi! Sou a maquininha do Multi Pagamentos! 👋"), 700);
+  </script>
+</body>
+
+</html>
